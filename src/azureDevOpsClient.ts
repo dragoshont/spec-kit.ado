@@ -7,6 +7,7 @@ export interface WorkItemCreateInfo {
     description: string;
     tags?: string[];
     workItemType?: string;
+    state?: string;
 }
 
 export interface WorkItemUpdateInfo {
@@ -55,6 +56,15 @@ export class AzureDevOpsClient {
                 value: workItemInfo.description
             }
         ];
+
+        // Add state if provided
+        if (workItemInfo.state) {
+            patchDocument.push({
+                op: 'add',
+                path: '/fields/System.State',
+                value: workItemInfo.state
+            });
+        }
 
         // Add tags if provided
         if (workItemInfo.tags && workItemInfo.tags.length > 0) {
@@ -138,11 +148,15 @@ export class AzureDevOpsClient {
     async queryWorkItemsByTag(tag: string): Promise<WorkItem[]> {
         const witApi = await this.getWorkItemTrackingApi();
 
+        // Sanitize inputs to prevent WIQL injection
+        const sanitizedProject = this.projectName.replace(/'/g, "''");
+        const sanitizedTag = tag.replace(/'/g, "''");
+
         const wiql = {
             query: `SELECT [System.Id], [System.Title], [System.State], [System.Tags] 
                     FROM WorkItems 
-                    WHERE [System.TeamProject] = '${this.projectName}' 
-                    AND [System.Tags] CONTAINS '${tag}' 
+                    WHERE [System.TeamProject] = '${sanitizedProject}' 
+                    AND [System.Tags] CONTAINS '${sanitizedTag}' 
                     ORDER BY [System.CreatedDate] DESC`
         };
 

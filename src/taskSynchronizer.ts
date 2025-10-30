@@ -53,25 +53,37 @@ export class TaskSynchronizer {
                     const workItemId = existingWorkItem.id!;
                     const currentTitle = existingWorkItem.fields?.['System.Title'] || '';
                     const currentDescription = existingWorkItem.fields?.['System.Description'] || '';
+                    const currentState = existingWorkItem.fields?.['System.State'] || '';
+                    const currentTags = existingWorkItem.fields?.['System.Tags'] || '';
+                    
+                    const newState = this.mapTaskStatusToAdoState(task.status);
+                    const newTags = tags.join('; ');
 
-                    // Only update if there are changes
-                    if (currentTitle !== task.title || currentDescription !== task.description) {
+                    // Check if there are any changes (title, description, state, or tags)
+                    const hasChanges = 
+                        currentTitle !== task.title ||
+                        currentDescription !== task.description ||
+                        (newState && currentState !== newState) ||
+                        currentTags !== newTags;
+
+                    if (hasChanges) {
                         await this.adoClient.updateWorkItem({
                             id: workItemId,
                             title: task.title,
                             description: task.description,
                             tags: tags,
-                            state: this.mapTaskStatusToAdoState(task.status)
+                            state: newState
                         });
                         result.updated++;
                     }
                 } else {
-                    // Create new work item
+                    // Create new work item with initial state based on task status
                     await this.adoClient.createWorkItem({
                         title: task.title,
                         description: this.formatTaskDescription(task),
                         tags: tags,
-                        workItemType: 'Task'
+                        workItemType: 'Task',
+                        state: this.mapTaskStatusToAdoState(task.status)
                     });
                     result.created++;
                 }
