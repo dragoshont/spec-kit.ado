@@ -1,0 +1,69 @@
+{
+  "name": "speckit-ado",
+  "displayName": "Spec-Kit Azure DevOps Integration",
+  "description": "VSCode extension to sync spec-kit generated tasks with Azure DevOps backlog",
+  "version": "0.1.0",
+  "publisher": "dragoshont",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:speckit.ado.sync"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "speckit.ado.sync",
+        "title": "Spec-Kit ADO: Sync Tasks with Azure DevOps"
+      }
+    ],
+    "configuration": {
+      "title": "Spec-Kit Azure DevOps",
+      "properties": {
+        "speckit.ado.organizationUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Azure DevOps organization URL (e.g., https://dev.azure.com/yourorg)"
+        },
+        "speckit.ado.project": {
+          "type": "string",
+          "default": "",
+          "description": "Azure DevOps project name"
+        },
+        "speckit.ado.personalAccessToken": {
+          "type": "string",
+          "default": "",
+          "description": "Azure DevOps Personal Access Token (PAT) - stored securely"
+        },
+        "speckit.ado.taskFilePath": {
+          "type": "string",
+          "default": ".speckit/tasks.md",
+          "description": "Path to spec-kit tasks file relative to workspace root"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.40.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "azure-devops-node-api": "^12.0.0"
+  }
+}
