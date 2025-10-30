@@ -143,14 +143,33 @@ export class AzureDevOpsClient {
     }
 
     /**
+     * Sanitize input for WIQL queries to prevent injection attacks
+     */
+    private sanitizeWiqlValue(value: string): string {
+        // Replace single quotes with doubled single quotes (standard SQL escaping)
+        // Remove or escape other potentially dangerous characters
+        return value
+            .replace(/'/g, "''")
+            .replace(/[[\]]/g, '') // Remove brackets
+            .replace(/;/g, '') // Remove semicolons
+            .replace(/--/g, '') // Remove SQL comments
+            .replace(/\/\*/g, '') // Remove multi-line comment start
+            .replace(/\*\//g, ''); // Remove multi-line comment end
+    }
+
+    /**
      * Query work items by tags
      */
     async queryWorkItemsByTag(tag: string): Promise<WorkItem[]> {
         const witApi = await this.getWorkItemTrackingApi();
 
-        // Sanitize inputs to prevent WIQL injection
-        const sanitizedProject = this.projectName.replace(/'/g, "''");
-        const sanitizedTag = tag.replace(/'/g, "''");
+        // Validate and sanitize inputs to prevent WIQL injection
+        if (!tag || typeof tag !== 'string') {
+            throw new Error('Invalid tag parameter');
+        }
+
+        const sanitizedProject = this.sanitizeWiqlValue(this.projectName);
+        const sanitizedTag = this.sanitizeWiqlValue(tag);
 
         const wiql = {
             query: `SELECT [System.Id], [System.Title], [System.State], [System.Tags] 

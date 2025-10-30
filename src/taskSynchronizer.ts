@@ -56,21 +56,21 @@ export class TaskSynchronizer {
                     const currentState = existingWorkItem.fields?.['System.State'] || '';
                     const currentTags = existingWorkItem.fields?.['System.Tags'] || '';
                     
-                    const newState = this.mapTaskStatusToAdoState(task.status);
+                    const newState = this.mapTaskStatusToAdoState(task.status) || 'To Do';
                     const newTags = tags.join('; ');
 
                     // Check if there are any changes (title, description, state, or tags)
                     const hasChanges = 
                         currentTitle !== task.title ||
                         currentDescription !== task.description ||
-                        (newState && currentState !== newState) ||
+                        currentState !== newState ||
                         currentTags !== newTags;
 
                     if (hasChanges) {
                         await this.adoClient.updateWorkItem({
                             id: workItemId,
                             title: task.title,
-                            description: task.description,
+                            description: this.formatTaskDescription(task),
                             tags: tags,
                             state: newState
                         });
@@ -83,7 +83,7 @@ export class TaskSynchronizer {
                         description: this.formatTaskDescription(task),
                         tags: tags,
                         workItemType: 'Task',
-                        state: this.mapTaskStatusToAdoState(task.status)
+                        state: this.mapTaskStatusToAdoState(task.status) || 'To Do'
                     });
                     result.created++;
                 }
